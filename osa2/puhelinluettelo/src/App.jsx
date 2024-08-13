@@ -5,8 +5,10 @@ const Filter = ({ filter, handleFilterChange }) => {
   return (
     <div>
       filter shown with <input
+      name="filter"
       value={filter}
       onChange={handleFilterChange}
+      autoComplete="off"
       />
     </div>
   )
@@ -17,14 +19,18 @@ const PersonForm = (props) => {
     <form onSubmit={props.addPerson}>
       <div>
         name: <input
+        name="name"
         value={props.newName}
         onChange={props.handlePersonChange}
+        autoComplete="off"
         />
       </div>
       <div>
         number: <input
+        name="number"
         value={props.newNumber}
         onChange={props.handleNumberChange}
+        autoComplete="off"
         />
       </div>
       <div>
@@ -46,12 +52,57 @@ const Persons = ({ persons, removePerson }) => {
   )
 }
 
+const Notification = ({ message}) => {
+  const notificationStyle = {
+    color: 'green',
+    background: 'lightgrey',
+    fontSize: 20,
+    borderStyle: 'solid',
+    borderRadius: 5,
+    padding: 10,
+    marginBottom: 10
+  }
+  
+  if (message === null) {
+    return null
+  }
+
+  return (
+    <div style={notificationStyle}>
+      {message}
+    </div>
+  )
+}
+
+const Error = ({ message}) => {
+  const errorStyle = {
+    color: 'red',
+    background: 'lightgrey',
+    fontSize: 20,
+    borderStyle: 'solid',
+    borderRadius: 5,
+    padding: 10,
+    marginBottom: 10
+  }
+  
+  if (message === null) {
+    return null
+  }
+
+  return (
+    <div style={errorStyle}>
+      {message}
+    </div>
+  )
+}
       
 const App = () => {
   const [persons, setPersons] = useState([])
   const [newName, setNewName] = useState('')
   const [newNumber, setNewNumber] = useState('')
   const [filter, setFilter] = useState('')
+  const [message, setMessage] = useState(null)
+  const [error, setError] = useState(null)
 
   useEffect(() => {
     personService
@@ -78,6 +129,10 @@ const App = () => {
         setPersons(persons.concat(personObject))
         setNewName('')
         setNewNumber('')
+        setMessage(`Added ${personObject.name}`)
+        setTimeout(() => {
+          setMessage(null)
+        }, 5000)
       })
   }
 
@@ -88,8 +143,13 @@ const App = () => {
       .then(response => {
         console.log(response)
         setPersons(persons.filter(person => person.id !== id))
+        setMessage(`Deleted ${persons.find(person => person.id === id).name}`)
+        setTimeout(() => {
+          setMessage(null)
+        }, 5000)
       })
-  }}
+  }
+}
 
   const updatePerson = (id, newObject) => {
     if (window.confirm(`${newObject.name} is already added to phonebook, replace the old number with a new one?`)) {
@@ -100,8 +160,20 @@ const App = () => {
         setPersons(persons.map(person => person.id !== id ? person : response))
         setNewName('')
         setNewNumber('')
+        setMessage(`Updated ${newObject.name}`)
+        setTimeout(() => {
+          setMessage(null)
+        }, 5000)
       })
-  }}
+      .catch(error => {
+        setError(`Information of ${newName} has already been removed from server`)
+        setPersons(persons.filter(person => person.id !== id))
+        setTimeout(() => {
+          setError(null)
+        }, 5000)
+      })
+  }
+}
 
   const handlePersonChange = (event) => {
     setNewName(event.target.value)
@@ -124,6 +196,14 @@ const App = () => {
   return (
     <div>
       <h2>Phonebook</h2>
+      
+      <Notification 
+      message={message} 
+      />
+
+      <Error
+      message={error}
+      />
 
       <Filter 
       filter={filter} 
