@@ -15,6 +15,21 @@ const Filter = ({ filter, handleFilterChange }) => {
 }
 
 const Country = ({ country }) => {
+  const [weather, setWeather] = useState(null)
+
+  useEffect(() => {
+    const api_key = import.meta.env.VITE_SOME_KEY
+    axios
+      .get(`https://api.openweathermap.org/data/2.5/weather?q=${country.capital}&appid=${api_key}&units=metric`)
+      .then(response => {
+        setWeather(response.data)
+      });
+    }, [])
+
+  if (!weather) {
+    return null
+  }
+
   return (
     <div>
       <h1>{country.name.common}</h1>
@@ -27,11 +42,16 @@ const Country = ({ country }) => {
         ))}
       </ul>
       <img src={country.flags.png} alt="flag" width="100" />
+      <h2>Weather in {country.capital}</h2>
+      <div>temperature: {weather.main.temp} Celsius</div>
+      <img src={`http://openweathermap.org/img/wn/${weather.weather[0].icon}.png`} alt="weather icon" width="100" />
+      <div>wind: {weather.wind.speed} m/s</div>
     </div>
   )
 }
 
-const Countries = ({ countries }) => {
+
+const Countries = ({ countries, showCountry }) => {
   if (countries.length > 10) {
     return (
       <div>Too many matches, specify another filter</div>
@@ -44,7 +64,9 @@ const Countries = ({ countries }) => {
     <div>
       {countries.map(country => (
         <div key={country.name.common}>{
-        country.name.common}</div>
+        country.name.common}
+        <button onClick={() => showCountry(country.name.common)}>show</button>
+        </div>
       ))}
     </div>
   );
@@ -68,6 +90,11 @@ const App = () => {
     setFilter(event.target.value)
   }
 
+  const showCountry = (name) => {
+    setFilter(name)
+  }
+
+
   const countriesToShow = filter === ''
     ? countries
     : countries.filter(country => country.name.common.toLowerCase().includes(filter.toLowerCase()))
@@ -82,6 +109,7 @@ const App = () => {
 
       <Countries
       countries={countriesToShow}
+      showCountry={showCountry}
       />
 
     </div>
