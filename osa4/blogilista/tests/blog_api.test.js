@@ -4,6 +4,7 @@ const supertest = require('supertest')
 const app = require('../app')
 const assert = require('node:assert')
 const Blog = require('../models/blog')
+const User = require('../models/user')
 
 const api = supertest(app)
 const blogs = [
@@ -39,8 +40,27 @@ const blogs = [
     }
   ]
 
+const users = [
+    {
+    username: "root",
+    name: "Superuser",
+    password: "salainen",
+    },
+    {
+    username: "test",
+    name: "Test User",
+    password: "kolme123",
+    },
+    {
+    username: "test2",
+    name: "Test User2",
+    password: "kolme1233",
+    }
+]
+
 beforeEach(async () => {
     await Blog.deleteMany({})
+    await User.deleteMany({})
     let blogObject = new Blog(blogs[0])
     await blogObject.save()
     blogObject = new Blog(blogs[1])
@@ -51,6 +71,12 @@ beforeEach(async () => {
     await blogObject.save()
     blogObject = new Blog(blogs[4])
     await blogObject.save()
+    let userObject = new User(users[0])
+    await userObject.save()
+    userObject = new User(users[1])
+    await userObject.save()
+    userObject = new User(users[2])
+    await userObject.save()
 })
 
 test ('correct amoung of blogs is returned', async () => {
@@ -164,6 +190,53 @@ test ('blog can be updated', async () => {
     assert.deepStrictEqual(updated.title + updated.author + updated.url + updated.likes, updatedBlog.title + updatedBlog.author + updatedBlog.url + updatedBlog.likes)
 })
 
+test ('user with too short password is not created', async () => {
+    const newUser = {
+        username: "test3",
+        name: "Test User3",
+        password: "12",
+    }
+
+    await api
+        .post('/api/users')
+        .send(newUser)
+        .expect(400)
+
+    const response = await api.get('/api/users')
+    assert.strictEqual(response.body.length, users.length)
+})
+
+test ('user with too short username is not created', async () => {
+    const newUser = {
+        username: "te",
+        name: "Test User3",
+        password: "123",
+    }
+
+    await api
+        .post('/api/users')
+        .send(newUser)
+        .expect(400)
+
+    const response = await api.get('/api/users')
+    assert.strictEqual(response.body.length, users.length)
+})
+
+test ('user with non-unique username is not created', async () => {
+    const newUser = {
+        username: "root",
+        name: "Test User3",
+        password: "123",
+    }
+
+    await api
+        .post('/api/users')
+        .send(newUser)
+        .expect(400)
+
+    const response = await api.get('/api/users')
+    assert.strictEqual(response.body.length, users.length)
+})
 
 after(async () => {
     await mongoose.connection.close()
