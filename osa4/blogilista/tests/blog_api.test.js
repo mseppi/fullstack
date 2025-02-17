@@ -5,6 +5,7 @@ const app = require('../app')
 const assert = require('node:assert')
 const Blog = require('../models/blog')
 const User = require('../models/user')
+const bcrypt = require('bcrypt')
 
 const api = supertest(app)
 const blogs = [
@@ -45,38 +46,27 @@ const users = [
     username: "root",
     name: "Superuser",
     password: "salainen",
-    },
-    {
-    username: "test",
-    name: "Test User",
-    password: "kolme123",
-    },
-    {
-    username: "test2",
-    name: "Test User2",
-    password: "kolme1233",
     }
 ]
 
 beforeEach(async () => {
     await Blog.deleteMany({})
     await User.deleteMany({})
-    let blogObject = new Blog(blogs[0])
-    await blogObject.save()
-    blogObject = new Blog(blogs[1])
-    await blogObject.save()
-    blogObject = new Blog(blogs[2])
-    await blogObject.save()
-    blogObject = new Blog(blogs[3])
-    await blogObject.save()
-    blogObject = new Blog(blogs[4])
-    await blogObject.save()
-    let userObject = new User(users[0])
+
+    const passwordHash = await bcrypt.hash(users[0].password, 10)
+    let userObject = new User({ ...users[0], passwordHash })
     await userObject.save()
-    userObject = new User(users[1])
-    await userObject.save()
-    userObject = new User(users[2])
-    await userObject.save()
+
+    let blogObject = new Blog({...blogs[0], user: userObject._id})
+    await blogObject.save()
+    blogObject = new Blog({...blogs[1], user: userObject._id})
+    await blogObject.save()
+    blogObject = new Blog({...blogs[2], user: userObject._id})
+    await blogObject.save()
+    blogObject = new Blog({...blogs[3], user: userObject._id})
+    await blogObject.save()
+    blogObject = new Blog({...blogs[4], user: userObject._id})
+    await blogObject.save()
 })
 
 test ('correct amoung of blogs is returned', async () => {
@@ -97,9 +87,14 @@ test ('a valid blog can be added', async () => {
         likes: 4,
     }
 
+    const login = await api
+        .post('/api/login')
+        .send(users[0])
+
     await api
         .post('/api/blogs')
         .send(newBlog)
+        .set('Authorization', `Bearer ${login.body.token}`)
         .expect(201)
         .expect('Content-Type', /application\/json/)
 
@@ -116,9 +111,14 @@ test ('if likes is missing, it defaults to 0', async () => {
         url: "123.com",
     }
 
+    const login = await api
+        .post('/api/login')
+        .send(users[0])
+
     await api
         .post('/api/blogs')
         .send(newBlog)
+        .set('Authorization', `Bearer ${login.body.token}`)
         .expect(201)
         .expect('Content-Type', /application\/json/)
 
@@ -141,13 +141,19 @@ test ('if title or url is missing, return 400', async () => {
         likes: 1,
     }
 
+    const login = await api
+        .post('/api/login')
+        .send(users[0])
+
     await api
         .post('/api/blogs')
+        .set('Authorization', `Bearer ${login.body.token}`)
         .send(newBlog)
         .expect(400)
 
     await api
         .post('/api/blogs')
+        .set('Authorization', `Bearer ${login.body.token}`)
         .send(newBlog2)
         .expect(400)
 
@@ -158,16 +164,21 @@ test ('if title or url is missing, return 400', async () => {
 test ('blog can be deleted', async () => {
     const blogsAtStart = await api.get('/api/blogs')
     const blogToDelete = blogsAtStart.body[0]
+
+    const login = await api
+        .post('/api/login')
+        .send(users[0])
     
     await api
         .delete(`/api/blogs/${blogToDelete.id}`)
+        .set('Authorization', `Bearer ${login.body.token}`)
         .expect(204)
 
     const blogsAtEnd = await api.get('/api/blogs')
+    assert.strictEqual(blogsAtEnd.body.length, blogs.length - 1)
 
     const titles = blogsAtEnd.body.map(r => r.title)
     assert(!titles.includes(blogToDelete.title))
-    assert.strictEqual(blogsAtEnd.body.length, blogs.length - 1)
 })
 
 test ('blog can be updated', async () => {
@@ -236,6 +247,23 @@ test ('user with non-unique username is not created', async () => {
 
     const response = await api.get('/api/users')
     assert.strictEqual(response.body.length, users.length)
+})
+
+test ('blog cannot be created without token', async () => {
+    const newBlog = {
+        title: "asd",
+        author: "asd",
+        url: "asd.com",
+        likes: 4,
+    }
+
+    await api
+        .post('/api/blogs')
+        .send(newBlog)
+        .expect(401)
+
+    const response = await api.get('/api/blogs')
+    assert.strictEqual(response.body.length, blogs.length)
 })
 
 after(async () => {
