@@ -1,19 +1,20 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import Blog from './components/Blog'
 import blogService from './services/blogs'
 import loginService from './services/login'
 import Notification from './components/Notification'
+import Togglable from './components/Togglable'
+import BlogForm from './components/BlogForm'
 
 const App = () => {
   const [blogs, setBlogs] = useState([])
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [user, setUser] = useState(null)
-  const [newTitle, setNewTitle] = useState('')
-  const [newAuthor, setNewAuthor] = useState('')
-  const [newUrl, setNewUrl] = useState('')
   const [errorMessage, setErrorMessage] = useState(null)
   const [color, setColor] = useState('')
+
+  const blogFormRef = useRef()
 
   useEffect(() => {
     blogService.getAll().then(blogs =>
@@ -58,32 +59,38 @@ const App = () => {
     window.localStorage.removeItem('loggedBlogappUser')
     setUser(null)
   }
-
-  const handleCreate = async (event) => {
-    event.preventDefault()
-    try {
-      const blog = await blogService.create({
-        title: newTitle, author: newAuthor, url: newUrl
-      })
-      setBlogs(blogs.concat(blog))
-      setNewTitle('')
-      setNewAuthor('')
-      setNewUrl('')
-      setErrorMessage(`a new blog ${blog.title} by ${blog.author} added`)
-      setColor('green')
-      setTimeout(() => {
-        setErrorMessage(null)
-      }, 5000)
-    }
-    catch (exception) {
-      console.log('error creating blog')
-      setColor('red')
-      setErrorMessage('error creating blog')
-      setTimeout(() => {
-        setErrorMessage(null)
-      }, 5000)
-    }
+  
+  const addBlog = (blogObject) => {
+    blogFormRef.current.toggleVisibility()
+    blogService
+      .create(blogObject)
+      .then(returnedBlog => {
+        const blogWithUser = { ...returnedBlog, user: user }
+        setBlogs(blogs.concat(blogWithUser))
+        setColor('green')
+        setErrorMessage(`a new blog ${returnedBlog.title} by ${returnedBlog.author} added`)
+        setTimeout(() => {
+          setErrorMessage(null)
+        }, 5000)
+      }
+      ).catch(error => {
+        setColor('red')
+        setErrorMessage(`error: ${error.response.data.error}`)
+        setTimeout(() => {
+          setErrorMessage(null)
+        }, 5000)
+      }) 
   }
+
+  const updateBlog = (updatedBlog) => {
+    setBlogs(blogs.map(blog => blog.id === updatedBlog.id ? updatedBlog : blog))
+  }
+
+  const removeBlog = (id) => {
+    setBlogs(blogs.filter(blog => blog.id !== id))
+  }
+    
+
 
   if (user === null) {
     return (
@@ -125,39 +132,14 @@ const App = () => {
 
         <p>{user.name} logged in <button onClick={handleLogout}>logout</button></p>
         <h2>create new</h2>
-        <form onSubmit={handleCreate}>
-          <div>
-            title:
-            <input
-              type="text"
-              value={newTitle}
-              name="Title"
-              onChange={({ target }) => setNewTitle(target.value)}
-            />
-          </div>
-          <div>
-            author:
-            <input
-              type="text"
-              value={newAuthor}
-              name="Author"
-              onChange={({ target }) => setNewAuthor(target.value)}
-            />
-          </div>
-          <div>
-            url:
-            <input
-              type="text"
-              value={newUrl}
-              name="Url"
-              onChange={({ target }) => setNewUrl(target.value)}
-            />
-          </div>
-          <button type="submit">create</button>
-        </form>
+        <Togglable buttonLabel='new blog' ref={blogFormRef}>
+          <BlogForm
+            createBlog={addBlog}
+          />
+        </Togglable>
         {blogs.map(blog =>
-          <Blog key={blog.id} blog={blog} />
-        )}
+          <Blog key={blog.id} blog={blog} updateBlog={updateBlog} loggedInUser={user} removeBlog={removeBlog}/>
+        ).sort((a, b) => b.props.blog.likes - a.props.blog.likes)}
       </div>
     )
   }
