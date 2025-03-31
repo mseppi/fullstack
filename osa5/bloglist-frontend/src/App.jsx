@@ -19,7 +19,7 @@ const App = () => {
   useEffect(() => {
     blogService.getAll().then(blogs =>
       setBlogs( blogs )
-    )  
+    )
   }, [])
 
   useEffect(() => {
@@ -40,7 +40,7 @@ const App = () => {
       })
       window.localStorage.setItem(
         'loggedBlogappUser', JSON.stringify(user)
-      ) 
+      )
       blogService.setToken(user.token)
       setUser(user)
       setUsername('')
@@ -59,7 +59,7 @@ const App = () => {
     window.localStorage.removeItem('loggedBlogappUser')
     setUser(null)
   }
-  
+
   const addBlog = (blogObject) => {
     blogFormRef.current.toggleVisibility()
     blogService
@@ -79,7 +79,7 @@ const App = () => {
         setTimeout(() => {
           setErrorMessage(null)
         }, 5000)
-      }) 
+      })
   }
 
   const updateBlog = (updatedBlog) => {
@@ -89,7 +89,7 @@ const App = () => {
   const removeBlog = (id) => {
     setBlogs(blogs.filter(blog => blog.id !== id))
   }
-    
+
 
 
   if (user === null) {
