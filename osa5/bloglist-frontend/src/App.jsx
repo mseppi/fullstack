@@ -82,12 +82,43 @@ const App = () => {
       })
   }
 
-  const updateBlog = (updatedBlog) => {
-    setBlogs(blogs.map(blog => blog.id === updatedBlog.id ? updatedBlog : blog))
+  const updateBlog = async (blogObject) => {
+    try {
+      const { id, title, author, url, likes, user } = blogObject
+      const updatedBlog = await blogService.update({ id, title, author, url, likes: likes + 1, user: user.id })
+      setBlogs(blogs.map((blog) =>
+        blog.id === updatedBlog.id
+          ? { ...updatedBlog, user }
+          : blog
+      ))
+    }
+    catch (error) {
+      setColor('red')
+      setErrorMessage(`error: ${error.response.data.error}`)
+      setTimeout(() => {
+        setErrorMessage(null)
+      }, 5000)
+    }
   }
 
-  const removeBlog = (id) => {
-    setBlogs(blogs.filter(blog => blog.id !== id))
+  const removeBlog = async (id) => {
+    try {
+      await blogService.remove(id)
+      const newBlogs = blogs.filter(blog => blog.id !== id)
+      setBlogs(newBlogs)
+      setColor('green')
+      setErrorMessage('blog removed')
+      setTimeout(() => {
+        setErrorMessage(null)
+      }, 5000)
+    }
+    catch (error) {
+      setColor('red')
+      setErrorMessage(`error: ${error.response.data.error}`)
+      setTimeout(() => {
+        setErrorMessage(null)
+      }, 5000)
+    }
   }
 
 

@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import blogService from '../services/blogs'
 
 const Blog = ({ blog, updateBlog, loggedInUser, removeBlog }) => {
   const [visibility, setVisibility] = useState(false)
@@ -8,20 +7,8 @@ const Blog = ({ blog, updateBlog, loggedInUser, removeBlog }) => {
     setVisibility(!visibility)
   }
 
-  const handleLike = async () => {
-    const updatedBlog = {
-      ...blog,
-      likes: blog.likes + 1,
-      user: blog.user.id
-    }
-
-    const returnedBlog = await blogService.update(blog.id, updatedBlog)
-    updateBlog({ ...returnedBlog, user: blog.user })
-  }
-
   const handleRemove = async () => {
     if (window.confirm(`Remove blog ${blog.title} by ${blog.author}`)) {
-      await blogService.remove(blog.id)
       removeBlog(blog.id)
     }
   }
@@ -47,7 +34,7 @@ const Blog = ({ blog, updateBlog, loggedInUser, removeBlog }) => {
           <div>{blog.url}</div>
           <div>
             {blog.likes} likes
-            <button onClick={handleLike}>like</button>
+            <button onClick={() => updateBlog(blog)}>like</button>
           </div>
           <div>{blog.user.name}</div>
           {loggedInUser.name === blog.user.name && (
