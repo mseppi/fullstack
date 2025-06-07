@@ -6,7 +6,6 @@ const Blog = require('../models/blog')
 usersRouter.post('/', async (request, response) => {
     try {
         const { username, name, password } = request.body
-        const blog = await Blog.findOne({})
         if (!password || password.length < 3) {
             return response.status(400).json({ error: 'password must be at least 3 characters long' })
         }
@@ -15,7 +14,6 @@ usersRouter.post('/', async (request, response) => {
         const passwordHash = await bcrypt.hash(password, saltRounds)
 
         const user = new User({
-            blogs: blog._id,
             username,
             name,
             passwordHash,
