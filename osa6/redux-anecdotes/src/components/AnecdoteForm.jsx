@@ -4,7 +4,7 @@ import { createAnecdote } from '../reducers/anecdoteReducer'
 const AnecdoteForm = () => {
   const dispatch = useDispatch()
 
-  const addAnecdote = (event) => {
+  const addAnecdote = async (event) => {
     event.preventDefault()
     const content = event.target[0].value
     event.target[0].value = ''
