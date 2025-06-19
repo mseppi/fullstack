@@ -1,32 +1,33 @@
-import { useState } from 'react'
+import { useState } from "react";
 
 const Blog = ({ blog, updateBlog, loggedInUser, removeBlog }) => {
-  const [visibility, setVisibility] = useState(false)
+  const [visibility, setVisibility] = useState(false);
 
   const toggleVisibility = () => {
-    setVisibility(!visibility)
-  }
+    setVisibility(!visibility);
+  };
 
   const handleRemove = async () => {
     if (window.confirm(`Remove blog ${blog.title} by ${blog.author}`)) {
-      removeBlog(blog.id)
+      removeBlog(blog.id);
     }
-  }
-
-
+  };
 
   return (
-    <div className="blog" style={{
-      paddingTop: 10,
-      paddingLeft: 2,
-      border: 'solid',
-      borderWidth: 1,
-      marginBottom: 5
-    }}>
+    <div
+      className="blog"
+      style={{
+        paddingTop: 10,
+        paddingLeft: 2,
+        border: "solid",
+        borderWidth: 1,
+        marginBottom: 5,
+      }}
+    >
       <div>
         {blog.title} {blog.author}
         <button onClick={toggleVisibility}>
-          {visibility ? 'hide' : 'view'}
+          {visibility ? "hide" : "view"}
         </button>
       </div>
       {visibility && (
@@ -43,7 +44,7 @@ const Blog = ({ blog, updateBlog, loggedInUser, removeBlog }) => {
         </div>
       )}
     </div>
-  )
-}
+  );
+};
 
-export default Blog
+export default Blog;
