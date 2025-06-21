@@ -5,15 +5,17 @@ import loginService from "./services/login";
 import Notification from "./components/Notification";
 import Togglable from "./components/Togglable";
 import BlogForm from "./components/BlogForm";
+import { useDispatch } from "react-redux";
+import { setNotificationWithTimeout } from "./reducers/notificationReducer";
+
 
 const App = () => {
   const [blogs, setBlogs] = useState([]);
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [user, setUser] = useState(null);
-  const [errorMessage, setErrorMessage] = useState(null);
-  const [color, setColor] = useState("");
 
+  const dispatch = useDispatch();
   const blogFormRef = useRef();
 
   useEffect(() => {
@@ -42,12 +44,7 @@ const App = () => {
       setUsername("");
       setPassword("");
     } catch (exception) {
-      console.log("wrong credentials");
-      setColor("red");
-      setErrorMessage("wrong credentials");
-      setTimeout(() => {
-        setErrorMessage(null);
-      }, 5000);
+      dispatch(setNotificationWithTimeout("wrong credentials", 'red', 5));
     }
   };
 
@@ -63,20 +60,22 @@ const App = () => {
       .then((returnedBlog) => {
         const blogWithUser = { ...returnedBlog, user: user };
         setBlogs(blogs.concat(blogWithUser));
-        setColor("green");
-        setErrorMessage(
-          `a new blog ${returnedBlog.title} by ${returnedBlog.author} added`,
+        dispatch(
+          setNotificationWithTimeout(
+            `a new blog ${returnedBlog.title} by ${returnedBlog.author} added`,
+            'green',
+            5,
+          ),
         );
-        setTimeout(() => {
-          setErrorMessage(null);
-        }, 5000);
       })
       .catch((error) => {
-        setColor("red");
-        setErrorMessage(`error: ${error.response.data.error}`);
-        setTimeout(() => {
-          setErrorMessage(null);
-        }, 5000);
+        dispatch(
+          setNotificationWithTimeout(
+            `error: ${error.response.data.error}`,
+            'red',
+            5,
+          ),
+        );
       });
   };
 
@@ -97,11 +96,13 @@ const App = () => {
         ),
       );
     } catch (error) {
-      setColor("red");
-      setErrorMessage(`error: ${error.response.data.error}`);
-      setTimeout(() => {
-        setErrorMessage(null);
-      }, 5000);
+      dispatch(
+        setNotificationWithTimeout(
+          `error: ${error.response.data.error}`,
+          'red',
+          5,
+        ),
+      );
     }
   };
 
@@ -110,17 +111,15 @@ const App = () => {
       await blogService.remove(id);
       const newBlogs = blogs.filter((blog) => blog.id !== id);
       setBlogs(newBlogs);
-      setColor("green");
-      setErrorMessage("blog removed");
-      setTimeout(() => {
-        setErrorMessage(null);
-      }, 5000);
+      dispatch(setNotificationWithTimeout("blog removed", "green", 5));
     } catch (error) {
-      setColor("red");
-      setErrorMessage(`error: ${error.response.data.error}`);
-      setTimeout(() => {
-        setErrorMessage(null);
-      }, 5000);
+      dispatch(
+        setNotificationWithTimeout(
+          `error: ${error.response.data.error}`,
+          'red',
+          5,
+        ),
+      );
     }
   };
 
@@ -129,7 +128,7 @@ const App = () => {
       <div>
         <h2>log in to application</h2>
 
-        <Notification message={errorMessage} color={color} />
+        <Notification />
 
         <form onSubmit={handleLogin}>
           <div>
@@ -161,7 +160,7 @@ const App = () => {
       <div>
         <h2>blogs</h2>
 
-        <Notification message={errorMessage} color={color} />
+        <Notification />
 
         <p>
           {user.name} logged in <button onClick={handleLogout}>logout</button>
