@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Form, Button, Card } from "react-bootstrap";
 
 const BlogForm = ({ createBlog }) => {
   const [newTitle, setNewTitle] = useState("");
@@ -16,43 +17,51 @@ const BlogForm = ({ createBlog }) => {
     setNewAuthor("");
     setNewUrl("");
   };
+
   return (
-    <form onSubmit={addBlog}>
-      <div>
-        title:
-        <input
-          data-testid="title"
-          type="text"
-          value={newTitle}
-          name="Title"
-          onChange={({ target }) => setNewTitle(target.value)}
-          placeholder="title of the blog"
-        />
-      </div>
-      <div>
-        author:
-        <input
-          data-testid="author"
-          type="text"
-          value={newAuthor}
-          name="Author"
-          onChange={({ target }) => setNewAuthor(target.value)}
-          placeholder="author of the blog"
-        />
-      </div>
-      <div>
-        url:
-        <input
-          data-testid="url"
-          type="text"
-          value={newUrl}
-          name="Url"
-          onChange={({ target }) => setNewUrl(target.value)}
-          placeholder="url of the blog"
-        />
-      </div>
-      <button type="submit">create</button>
-    </form>
+    <Card className="mt-4">
+      <Card.Body>
+        <Card.Title>Create New Blog</Card.Title>
+        <Form onSubmit={addBlog}>
+          <Form.Group className="mb-3" controlId="formTitle">
+            <Form.Label>Title</Form.Label>
+            <Form.Control
+              data-testid="title"
+              type="text"
+              value={newTitle}
+              onChange={({ target }) => setNewTitle(target.value)}
+              placeholder="Enter blog title"
+            />
+          </Form.Group>
+
+          <Form.Group className="mb-3" controlId="formAuthor">
+            <Form.Label>Author</Form.Label>
+            <Form.Control
+              data-testid="author"
+              type="text"
+              value={newAuthor}
+              onChange={({ target }) => setNewAuthor(target.value)}
+              placeholder="Enter blog author"
+            />
+          </Form.Group>
+
+          <Form.Group className="mb-3" controlId="formUrl">
+            <Form.Label>URL</Form.Label>
+            <Form.Control
+              data-testid="url"
+              type="text"
+              value={newUrl}
+              onChange={({ target }) => setNewUrl(target.value)}
+              placeholder="Enter blog URL"
+            />
+          </Form.Group>
+
+          <Button variant="primary" type="submit" className="w-100">
+            Create Blog
+          </Button>
+        </Form>
+      </Card.Body>
+    </Card>
   );
 };
 
