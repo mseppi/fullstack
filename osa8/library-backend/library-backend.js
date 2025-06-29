@@ -7,6 +7,7 @@ const Author = require('./models/author')
 const Book = require('./models/book')
 const User = require('./models/user')
 const mongoose = require('mongoose')
+const author = require('./models/author')
 mongoose.set('strictQuery', false)
 require('dotenv').config()
 
@@ -207,6 +208,12 @@ const resolvers = {
     bookCount: async (root) => {
       const books = await Book.find({ author: root._id })
       return books.length
+    }
+  },
+  Book: {
+    author: async (root) => {
+      const author = await Author.findById(root.author)
+      return author
     }
   },
   Mutation: {
